@@ -11,12 +11,11 @@ var Horizontal = require('./horizontal')
  */
 
 var defaults = {
-  callback: function () {},
+  callback () {},
   decimal: false,
   disable: false,
-  disableOpacity: 0.5,
+  disableOpacity: null,
   hideRange: false,
-  klass: '',
   min: 0,
   max: 100,
   start: null,

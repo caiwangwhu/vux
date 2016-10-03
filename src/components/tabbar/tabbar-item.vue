@@ -1,7 +1,8 @@
 <template>
-  <a href="javascript:;" class="weui_tabbar_item" :class="{'weui_bar_item_on': selected}" @click="onClick">
-    <div class="weui_tabbar_icon" :class="{'vux-reddot': showDot}">
+  <a href="javascript:;" class="weui_tabbar_item" :class="{'weui_bar_item_on': $parent.index === index}" @click="onItemClick">
+    <div class="weui_tabbar_icon" :class="[iconClass || $parent.iconClass, {'vux-reddot': showDot}]">
       <slot name="icon"></slot>
+      <sup><badge v-if="badge" :text="badge"></badge></sup>
     </div>
     <p class="weui_tabbar_label">
       <slot name="label"></slot>
@@ -10,26 +11,27 @@
 </template>
 
 <script>
+import { childMixin } from '../../mixins/multi-items'
+import { go } from '../../libs/router'
+import Badge from '../badge'
+
 export default {
+  components: {
+    Badge
+  },
+  mixins: [childMixin],
   props: {
-    selected: {
-      type: Boolean,
-      default: false
-    },
     showDot: {
       type: Boolean,
       default: false
-    }
-  },
-  methods: {
-    onClick: function () {
-      this.$dispatch('on-item-click', this.$el.getAttribute('data-index'))
-      this.selected = true
-    }
+    },
+    badge: String,
+    link: [String, Object],
+    iconClass: String
   },
   events: {
-    'on-item-click': function (dataIndex) {
-      this.selected = this.$el.getAttribute('data-index') === dataIndex
+    'on-item-click': function () {
+      go(this.link, this.$router)
     }
   }
 }

@@ -36,24 +36,17 @@ export default {
       type: Array,
       required: true
     },
-    value: {
-      type: String,
-      required: false,
-      twoWay: true
-    },
+    value: String,
     fillMode: {
       type: Boolean,
-      required: false,
       default: false
     },
     fillPlaceholder: {
       type: String,
-      required: false,
       default: '其他'
     },
     fillLabel: {
       type: String,
-      required: false,
       default: '其他'
     }
   },
@@ -61,7 +54,7 @@ export default {
     this.handleChangeEvent = true
   },
   methods: {
-    onFocus: function () {
+    onFocus () {
       this.value = this.fillValue || ''
       this.isFocus = true
     }
@@ -72,7 +65,7 @@ export default {
       if (newVal !== '' && isOption) {
         this.fillValue = ''
       }
-      this.$dispatch('on-change', newVal)
+      this.$emit('on-change', newVal)
     },
     fillValue (newVal) {
       if (this.fillMode && this.isFocus) {
@@ -99,7 +92,10 @@ function contains (a, obj) {
 }
 </script>
 
-<style>
+<style lang="less">
+@import '../../styles/weui/widget/weui_cell/weui_check';
+@import '../../styles/weui/widget/weui_cell/weui_form/weui_form_common';
+@import '../../styles/weui/icon/weui_icon_font';
 .weui_cell_radio > * {
   pointer-events: none;
 }

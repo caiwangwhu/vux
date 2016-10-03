@@ -1,12 +1,13 @@
 var path = require('path')
 var projectRoot = path.resolve(__dirname, '../')
+var src = path.join(projectRoot, 'src')
 
 module.exports = {
   entry: {
     app: './src/main.js'
   },
   output: {
-    path: path.resolve(__dirname, '../dist/static'),
+    path: path.resolve(__dirname, '../site/static'),
     publicPath: 'https://o3e85j0cv.qnssl.com/static/',
     filename: '[name].js'
   },
@@ -25,8 +26,8 @@ module.exports = {
   module: {
     preLoaders: [
       {
-        test: /\.js$/, 
-        loader: "eslint-loader", 
+        test: /\.js$/,
+        loader: 'eslint-loader',
         exclude: /node_modules/
       }
     ],
@@ -40,6 +41,11 @@ module.exports = {
         loader: 'babel',
         include: projectRoot,
         exclude: /node_modules/
+      },
+      {
+        test: /\.js$/,
+        loader: 'babel',
+        include: src
       },
       {
         test: /\.json$/,

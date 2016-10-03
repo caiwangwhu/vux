@@ -5,33 +5,23 @@
 </template>
 
 <script>
+import { parentMixin } from '../../mixins/multi-items'
+
 export default {
-  ready () {
-    const tabList = this.$el.querySelectorAll('.vux-button-tab-item')
-    this.tabNumber = tabList.length
-    let n = 0
-    for (let i of tabList) {
-      i.setAttribute('data-index', n)
-      n++
-    }
-  },
-  events: {
-    'on-item-click': function (index) {
-      this.$broadcast('on-item-click', index)
-      return true
-    }
+  mixins: [parentMixin],
+  props: {
+    height: Number
   }
 }
 </script>
 
 <style lang="less">
-@import '../variable.less';
+@import '../../styles/variable.less';
 
 .vux-button-group {
   & {
     display: box;
     display: flex;
-    padding: 6px 10px;
   }
 
   & > a  {

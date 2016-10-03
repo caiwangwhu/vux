@@ -36,9 +36,7 @@ const pullupDefaultConfig = () => ({
 
 export default {
   props: {
-    height: {
-      type: String
-    },
+    height: String,
     lockX: Boolean,
     lockY: Boolean,
     scrollbarX: Boolean,
@@ -59,6 +57,7 @@ export default {
       type: Boolean,
       default: true
     },
+    stopPropagation: Boolean,
     boundryCheck: {
       type: Boolean,
       default: true
@@ -92,18 +91,30 @@ export default {
     },
     pulldownStatus: {
       type: String,
-      default: 'default',
-      twoWay: true
+      default: 'default'
     },
     pullupStatus: {
       type: String,
-      default: 'default',
-      twoWay: true
+      default: 'default'
+    },
+    enableHorizontalSwiping: {
+      type: Boolean,
+      default: false
     }
   },
   methods: {
-    reset () {
-      this._xscroll && this._xscroll.render()
+    reset (scrollPosition) {
+      if (scrollPosition) {
+        if (typeof scrollPosition.left !== 'undefined') {
+          this._xscroll.scrollLeft(scrollPosition.left)
+        }
+        if (typeof scrollPosition.top !== 'undefined') {
+          this._xscroll.scrollTop(scrollPosition.top)
+        }
+      }
+      setTimeout(() => {
+        this._xscroll && this._xscroll.render()
+      })
     }
   },
   compiled () {
@@ -115,6 +126,11 @@ export default {
         this.height = `${document.documentElement.clientHeight}px`
         this.reset()
       }
+
+      if (this.height && this.height.indexOf('-') === 0) {
+        this.height = `${document.documentElement.clientHeight + parseInt(this.height)}px`
+      }
+
       return {
         height: `${this.height}`
       }
@@ -146,7 +162,8 @@ export default {
       useTransition: this.useTransition,
       preventDefault: this.preventDefault,
       boundryCheck: this.boundryCheck,
-      gpuAcceleration: this.gpuAcceleration
+      gpuAcceleration: this.gpuAcceleration,
+      stopPropagation: this.stopPropagation
     })
 
     if (this.usePulldown) {
@@ -159,7 +176,7 @@ export default {
       this.pulldown = new Pulldown(config)
       this._xscroll.plug(this.pulldown)
       this.pulldown.on('loading', (e) => {
-        this.$dispatch('pulldown:loading', this.uuid)
+        this.$emit('pulldown:loading', this.uuid)
       })
       this.pulldown.on('statuschange', (val) => {
         this.pulldownStatus = val.newVal
@@ -170,23 +187,42 @@ export default {
       // if use slot=pullup
       let container = this.$el.querySelector('div[slot="pullup"]')
       let config = Object.assign(pullupDefaultConfig(), this.pullupConfig)
+
       if (container) {
         config.container = container
       }
       this.pullup = new Pullup(config)
       this._xscroll.plug(this.pullup)
       this.pullup.on('loading', (e) => {
-        this.$dispatch('pullup:loading', this.uuid)
+        this.$emit('pullup:loading', this.uuid)
       })
       this.pullup.on('statuschange', (val) => {
         this.pullupStatus = val.newVal
       })
     }
 
+    if (this.enableHorizontalSwiping) {
+      this._xscroll.on('panstart', (e) => {
+        if (e.direction === 2 || e.direction === 4) {
+          e.preventDefault()
+          if (this.scrollbarY) {
+            this._xscroll.userConfig.scrollbarY = false
+          }
+          this._xscroll.userConfig.lockY = true
+        }
+      })
+      this._xscroll.on('panend', () => {
+        if (this.scrollbarY) {
+          this._xscroll.userConfig.scrollbarY = true
+        }
+        this._xscroll.userConfig.lockY = false
+      })
+    }
+
     this._xscroll.render()
   },
   events: {
-    'pulldown:reset': function (uuid) {
+    'pulldown:reset' (uuid) {
       // set pulldown status to default
       this.pulldownStatus = 'default'
       if (uuid === this.uuid) {
@@ -196,7 +232,7 @@ export default {
         })
       }
     },
-    'pullup:reset': function (uuid) {
+    'pullup:reset' (uuid) {
       // set pulldown status to default
       this.pullupStatus = 'default'
       if (uuid === this.uuid) {
@@ -204,12 +240,24 @@ export default {
         this.reset()
       }
     },
-    'pullup:done': function (uuid) {
-      this._xscroll.unplug(this.pullup)
+    'pullup:done' (uuid) {
+      if (uuid === this.uuid) {
+        this._xscroll.unplug(this.pullup)
+      }
     },
-    'scroller:reset': function (uuid) {
+    'scroller:reset' (uuid) {
       if (uuid === this.uuid) {
         this.reset()
+      }
+    },
+    'pullup:disable' (uuid) {
+      if (uuid === this.uuid) {
+        this.pullup.stop()
+      }
+    },
+    'pullup:enable' (uuid) {
+      if (uuid === this.uuid) {
+        this.pullup.restart()
       }
     }
   },

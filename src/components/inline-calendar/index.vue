@@ -17,7 +17,7 @@
     <table>
       <thead v-show="!hideWeekList">
         <tr>
-          <th v-for="(index, week) in weeks" class="week is-week-list-{{index}}">{{week}}</th>
+          <th v-for="(index, week) in weeksList" class="week is-week-list-{{index}}">{{week}}</th>
         </tr>
       </thead>
       <tbody>
@@ -30,6 +30,7 @@
           @click="select(k1,k2,$event)">
             <span
             v-show="(!child.isLastMonth && !child.isNextMonth ) || (child.isLastMonth && showLastMonth) || (child.isNextMonth && showNextMonth)">{{replaceText(child.day, formatDate(year, month, child))}}</span>
+            {{{customSlotFn(k1, k2, child)}}}
           </td>
         </tr>
       </tbody>
@@ -39,69 +40,24 @@
 
 <script>
 import format from '../datetime/format'
-import {getDays} from './util'
+import { getDays, zero } from './util'
+import props from './props'
 
 export default {
-  props: {
-    value: {
-      type: String,
-      twoWay: true,
-      default: ''
-    },
-    startDate: {
-      type: String
-    },
-    endDate: {
-      type: String
-    },
-    showLastMonth: {
-      type: Boolean,
-      default: true
-    },
-    showNextMonth: {
-      type: Boolean,
-      default: true
-    },
-    highlightWeekend: {
-      type: Boolean,
-      default: false
-    },
-    returnSixRows: {
-      type: Boolean,
-      default: true
-    },
-    hideHeader: {
-      type: Boolean,
-      default: false
-    },
-    hideWeekList: {
-      type: Boolean,
-      default: false
-    },
-    replaceTextList: {
-      type: Object,
-      default () {
-        return {}
-      }
-    }
-  },
-  data: function () {
+  props: props(),
+  data () {
     return {
       year: 0,
       month: 0,
       days: [],
       current: [],
       today: format(new Date(), 'YYYY-MM-DD'),
-      currentMonth: Number,
-      sep: '-',
-      weeks: ['日', '一', '二', '三', '四', '五', '六'],
       months: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
     }
   },
-  created: function () {
-    this.type = 'date'
+  ready () {
     this.value = this.convertDate(this.value)
-    this.render()
+    this.render(this.renderMonth[0], this.renderMonth[1] - 1)
   },
   computed: {
     _replaceTextList () {
@@ -113,26 +69,33 @@ export default {
     }
   },
   watch: {
-    value: function (val) {
+    value (val) {
       this.value = this.convertDate(val)
-      this.render(null, null, val)
+      if (this.renderOnValueChange) {
+        this.render(null, null, val)
+      } else {
+        this.render(this.year, this.month, this.value)
+      }
+      this.$emit('on-change', val)
     },
     returnSixRows (val) {
+      this.render(this.year, this.month, this.value)
+    },
+    disablePast () {
+      this.render(this.year, this.month, this.value)
+    },
+    disableFuture () {
       this.render(this.year, this.month, this.value)
     }
   },
   methods: {
-    replaceText: function (day, formatDay) {
-      const willReplace = this._replaceTextList[formatDay]
-      return willReplace || day
+    replaceText (day, formatDay) {
+      return this._replaceTextList[formatDay] || day
     },
-    convertDate: function (date) {
-      if (date === 'TODAY') {
-        return this.today
-      }
-      return date
+    convertDate (date) {
+      return date === 'TODAY' ? this.today : date
     },
-    buildClass: function (index, child, isCurrent) {
+    buildClass (index, child, isCurrent) {
       const className = {
         current: child.current || isCurrent,
         'is-disabled': child.disabled,
@@ -141,76 +104,52 @@ export default {
       className[`is-week-${index}`] = true
       return className
     },
-    render: function (year, month) {
+    render (year, month) {
       let data = getDays({
         year: year,
         month: month,
         value: this.value,
-        rangeBegin: this.startDate,
-        rangeEnd: this.endDate,
-        returnSixRows: this.returnSixRows
+        rangeBegin: this.convertDate(this.startDate),
+        rangeEnd: this.convertDate(this.endDate),
+        returnSixRows: this.returnSixRows,
+        disablePast: this.disablePast,
+        disableFuture: this.disableFuture
       })
       this.days = data.days
       this.year = data.year
       this.month = data.month
     },
-    zero: function (n) {
-      return n < 10 ? '0' + n : n
+    formatDate: (year, month, child) => {
+      return [year, zero(child.month + 1), zero(child.day)].join('-')
     },
-    formatDate: function (year, month, child) {
-      return year + '-' + this.zero(month + 1) + '-' + this.zero(child.day)
-    },
-    prev: function (e) {
-      e.stopPropagation()
-      var that = this
-      if (that.month === 0) {
-        that.month = 11
-        that.year = that.year - 1
+    prev () {
+      if (this.month === 0) {
+        this.month = 11
+        this.year = this.year - 1
       } else {
-        that.month = that.month - 1
+        this.month = this.month - 1
       }
-      that.render(that.year, that.month)
+      this.render(this.year, this.month)
     },
-    next: function (e) {
-      e.stopPropagation()
-      var that = this
-      if (that.month === 11) {
-        that.month = 0
-        that.year = that.year + 1
+    next () {
+      if (this.month === 11) {
+        this.month = 0
+        this.year = this.year + 1
       } else {
-        that.month = that.month + 1
+        this.month = this.month + 1
       }
-      this.render(that.year, that.month)
+      this.render(this.year, this.month)
     },
-    go: function (year, month) {
+    go (year, month) {
       this.render(year, month)
     },
-    select: function (k1, k2) {
+    select (k1, k2) {
       if (this.current.length > 0) {
         this.days[this.current[0]][this.current[1]].isCurrent = false
       }
       this.days[k1][k2].current = true
       this.current = [k1, k2]
-      this.value = this.year + this.sep + this.zero(this.month + 1) + this.sep + this.zero(this.days[k1][k2].day)
-      this.show = false
-    },
-    ok: function () {
-      var that = this
-      if (that.range) {
-        that.value = that.output(that.rangeBegin) + ' ~ ' + that.output(that.rangeEnd)
-      } else {
-        that.value = that.output([that.year, that.month, that.day])
-      }
-      that.show = false
-    },
-    cancel: function () {
-      this.show = false
-    },
-    output: function (args) {
-      var that = this
-      if (that.type === 'date') {
-        return args[0] + that.sep + that.zero(args[1] + 1) + that.sep + that.zero(args[2])
-      }
+      this.value = [this.year, zero(this.month + 1), zero(this.days[k1][k2].day)].join('-')
     }
   }
 }
@@ -254,7 +193,7 @@ export default {
 }
 .inline-calendar a {
   text-decoration: none;
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  tap-highlight-color: rgba(0, 0, 0, 0);
 }
 .calendar-year, .calendar-month {
   position: relative;
@@ -373,6 +312,7 @@ export default {
   text-align: center;
   vertical-align: middle;
   font-size:16px;
+  position: relative;
 }
 .inline-calendar td.week{
   pointer-events:none !important;
@@ -403,9 +343,6 @@ export default {
 .inline-calendar td.current > span {
   background-color: #04be02;
   color: #fff;
-}
-.inline-calendar thead th {
-  text-transform: uppercase;
 }
 .inline-calendar .timer{
   margin:10px 0;

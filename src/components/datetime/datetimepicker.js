@@ -6,7 +6,7 @@ const MASK_TEMPLATE = '<div class="dp-mask"></div>'
 const TEMPLATE = `<div class="dp-container">
   <div class="dp-header">
     <div class="dp-item dp-left" data-role="cancel">cancel</div>
-    <div class="dp-item dp-center"></div>
+    <div class="dp-item dp-center" data-role="clear"></div>
     <div class="dp-item dp-right" data-role="confirm">ok</div>
   </div>
   <div class="dp-content">
@@ -19,6 +19,7 @@ const TEMPLATE = `<div class="dp-container">
 </div>`
 
 var SHOW_ANIMATION_TIME = 100 // ms
+var SHOW_CONTAINER_TIME = 300
 
 var TYPE_MAP = {
   year: ['YYYY'],
@@ -27,8 +28,6 @@ var TYPE_MAP = {
   hour: ['HH', 'H'],
   minute: ['mm', 'm']
 }
-
-var BODY = document.body
 
 var MASK = null
 
@@ -51,11 +50,13 @@ var DEFAULT_CONFIG = {
   minuteRow: '{value}',
   format: 'YYYY-MM-DD',
   value: NOW.getFullYear() + '-' + (NOW.getMonth() + 1) + '-' + NOW.getDate(),
-  onSelect: function () {},
-  onConfirm: function () {},
-  onShow: function () {},
-  onHide: function () {},
+  onSelect () {},
+  onConfirm () {},
+  onClear () {},
+  onShow () {},
+  onHide () {},
   confirmText: 'ok',
+  clearText: '',
   cancelText: 'cancel'
 }
 
@@ -69,22 +70,20 @@ function renderScroller (el, data, value, fn) {
 }
 
 function showMask () {
-  if (MASK) {
-    MASK.style.display = 'block'
-    MASK.style.opacity = 0.5
-    return
+  if (!MASK) {
+    MASK = toElement(MASK_TEMPLATE)
+    document.body.appendChild(MASK)
+
+    MASK.addEventListener('click', function () {
+      CURRENT_PICKER && CURRENT_PICKER.hide()
+    }, false)
   }
 
-  MASK = toElement(MASK_TEMPLATE)
-  BODY.appendChild(MASK)
+  MASK.style.display = 'block'
 
   setTimeout(function () {
     MASK && (MASK.style.opacity = 0.5)
   }, 0)
-
-  MASK.addEventListener('click', function () {
-    CURRENT_PICKER && CURRENT_PICKER.hide()
-  }, false)
 }
 
 function hideMask () {
@@ -123,7 +122,21 @@ function DatetimePicker (config) {
 
 DatetimePicker.prototype = {
 
-  show: function (value) {
+  _show (newValueMap) {
+    var self = this
+
+    self.container.style.display = 'block'
+
+    each(TYPE_MAP, function (type) {
+      self[type + 'Scroller'] && self[type + 'Scroller'].select(trimZero(newValueMap[type]), false)
+    })
+
+    setTimeout(function () {
+      self.container.style['-webkit-transform'] = 'translateY(0)'
+      self.container.style.transform = 'translateY(0)'
+    }, 0)
+  },
+  show (value) {
     var self = this
     var config = self.config
     CURRENT_PICKER = self
@@ -135,15 +148,10 @@ DatetimePicker.prototype = {
     })
 
     if (self.container) {
-      self.container.style.display = 'block'
-
-      each(TYPE_MAP, function (type) {
-        self[type + 'Scroller'] && self[type + 'Scroller'].select(trimZero(newValueMap[type]), false)
-      })
+      self._show(newValueMap)
     } else {
       var container = self.container = toElement(config.template)
-
-      BODY.appendChild(container)
+      document.body.appendChild(container)
 
       self.container.style.display = 'block'
 
@@ -191,10 +199,13 @@ DatetimePicker.prototype = {
         if (self.config.cancelText) {
           self.find('[data-role=cancel]').innerText = self.config.cancelText
         }
+        if (self.config.clearText) {
+          self.find('[data-role=clear]').innerText = self.config.clearText
+        }
         self.renderText = true
       }
 
-      this.show(value)
+      this._show(newValueMap)
 
       self.find('[data-role=cancel]').addEventListener('click', function (e) {
         e.preventDefault()
@@ -205,13 +216,20 @@ DatetimePicker.prototype = {
         e.preventDefault()
         self.confirm()
       }, false)
+
+      if (self.config.clearText) {
+        self.find('[data-role=clear]').addEventListener('click', function (e) {
+          e.preventDefault()
+          self.clear()
+        }, false)
+      }
     }
 
     showMask()
     config.onShow.call(self)
   },
 
-  _makeData: function (type, year, month) {
+  _makeData (type, year, month) {
     var config = this.config
     var valueMap = this.valueMap
     var list = TYPE_MAP[type]
@@ -250,7 +268,7 @@ DatetimePicker.prototype = {
     return data
   },
 
-  _setDayScroller: function (year, month, day) {
+  _setDayScroller (year, month, day) {
     var self = this
     var maxDay = getMaxDay(year, month)
     if (day > maxDay) {
@@ -263,24 +281,29 @@ DatetimePicker.prototype = {
     })
   },
 
-  find: function (selector) {
+  find (selector) {
     return this.container.querySelector(selector)
   },
 
-  hide: function () {
+  hide () {
     var self = this
-    self.container.style.display = 'none'
+    self.container.style.removeProperty('transform')
+    self.container.style.removeProperty('-webkit-transform')
+
+    setTimeout(function () {
+      self.container.style.display = 'none'
+    }, SHOW_CONTAINER_TIME)
 
     hideMask()
 
     self.config.onHide.call(self)
   },
 
-  select: function (type, value) {
+  select (type, value) {
     this[type + 'Scroller'].select(value, false)
   },
 
-  destroy: function () {
+  destroy () {
     var self = this
     removeElement(MASK)
     removeElement(self.container)
@@ -288,7 +311,7 @@ DatetimePicker.prototype = {
     self.container = null
   },
 
-  getValue: function () {
+  getValue () {
     var self = this
     var config = self.config
 
@@ -313,12 +336,23 @@ DatetimePicker.prototype = {
     return value
   },
 
-  confirm: function () {
+  confirm () {
     var self = this
     var value = self.getValue()
     this.value = value
 
     if (self.config.onConfirm.call(self, value) === false) {
+      return
+    }
+
+    self.hide()
+  },
+
+  clear () {
+    var self = this
+    var value = self.getValue()
+
+    if (self.config.onClear.call(self, value) === false) {
       return
     }
 

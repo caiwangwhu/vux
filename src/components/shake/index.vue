@@ -6,10 +6,7 @@
 import Shake from 'shake.js'
 export default {
   props: {
-    stop: {
-      type: Boolean,
-      default: false
-    },
+    stop: Boolean,
     threshold: {
       type: Number,
       default: 15
@@ -27,7 +24,7 @@ export default {
     })
     this._handler = function () {
       if (!_this.stop) {
-        _this.$dispatch('on-shake')
+        _this.$emit('on-shake')
       }
     }
     window.addEventListener('shake', this._handler, false)

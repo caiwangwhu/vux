@@ -1,47 +1,79 @@
 <template>
-  <div v-show="show" transition="popup" :style="{height:height}" class="vux-popup">
+  <div v-show="show" transition="vux-popup" :style="{height:height}" class="vux-popup">
     <slot></slot>
   </div>
 </template>
 
 <script>
 import Popup from './popup'
+
 export default {
   props: {
-    show: {
-      type: Boolean,
-      default: false,
-      twoWay: true
-    },
+    show: Boolean,
     height: {
       type: String,
       default: 'auto'
+    },
+    hideOnBlur: {
+      type: Boolean,
+      default: true
     }
   },
   ready () {
-    var _this = this
+    const _this = this
     this.popup = new Popup({
       container: _this.$el,
       innerHTML: '',
-      onOpen: function (dialog) {
+      hideOnBlur: _this.hideOnBlur,
+      onOpen (dialog) {
+        _this.fixSafariOverflowScrolling('auto')
         _this.show = true
       },
-      onClose: function (dialog) {
+      onClose (dialog) {
         _this.show = false
+        if (Object.keys(window.__$vuxPopups).length >= 1) return
+        _this.fixSafariOverflowScrolling('touch')
       }
     })
+    this.$overflowScrollingList = document.querySelectorAll('.vux-fix-safari-overflow-scrolling')
+  },
+  methods: {
+    /**
+    * https://github.com/airyland/vux/issues/311
+    * https://benfrain.com/z-index-stacking-contexts-experimental-css-and-ios-safari/
+    */
+    fixSafariOverflowScrolling (type) {
+      if (!this.$overflowScrollingList.length) return
+      if (!/iphone/i.test(navigator.userAgent)) return
+      for (let i = 0; i < this.$overflowScrollingList.length; i++) {
+        this.$overflowScrollingList[i].style.webkitOverflowScrolling = type
+      }
+    }
+  },
+  data () {
+    return {
+      hasFirstShow: false
+    }
   },
   watch: {
-    show: function (val) {
+    show (val) {
       if (val) {
         this.popup.show()
+        this.$emit('on-show')
+        if (!this.hasFirstShow) {
+          this.$emit('on-first-show')
+          this.hasFirstShow = true
+        }
       } else {
-        this.popup.hide()
+        this.$emit('on-hide')
+        this.show = false
+        this.popup.hide(false)
       }
     }
   },
   beforeDestroy () {
     this.popup.destroy()
+    this.fixSafariOverflowScrolling('touch')
   }
 }
 </script>
@@ -50,19 +82,17 @@ export default {
 .vux-popup {
   border-top: 2px solid #04BE02;
 }
-.picker-dialog {
+.vux-popup-dialog {
   position: fixed;
   left: 0;
   bottom: 0;
   width: 100%;
   background: #eee;
   z-index: 101;
-  -webkit-transition-property: -webkit-transform;
   transition-property: transform;
-  -webkit-transition-duration: 300ms;
   transition-duration: 300ms;
 }
-.picker-mask {
+.vux-popup-mask {
   display: block;
   position: fixed;
   top: 0;
@@ -70,26 +100,20 @@ export default {
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 1;
   opacity: 0;
-  -webkit-tap-highlight-color: rgba(0,0,0,0);
-  -webkit-transition: all 0.2s;
-  transition: all 0.2s;
+  tap-highlight-color: rgba(0,0,0,0);
   z-index: -1;
 }
-.picker-mask.show {
+.vux-popup-mask.vux-popup-show {
   opacity: 1;
   z-index: 100;
+  transition: opacity 0.3s;
 }
-.popup-transiton {
-}
-.popup-enter {
-  background-color:red;
-  -webkit-transform: translate3d(0, 100%, 0);
+.vux-popup-transiton {}
+.vux-popup-enter {
   transform: translate3d(0, 100%, 0);
 }
-.popup-leave {
-  -webkit-transform: translate3d(0, 100%, 0);
+.vux-popup-leave {
   transform: translate3d(0, 100%, 0);
 }
 </style>

@@ -3,7 +3,6 @@
 </template>
 
 <script>
-import indexOf from 'lodash.indexof'
 // gif https://res.wx.qq.com/mpres/htmledition/images/icon/emotion/5.gif
 // whole https://res.wx.qq.com/mpres/htmledition/images/icon/emotion/default218877.gif
 // http://res.wx.qq.com/mmbizwap/zh_CN/htmledition/images/icon/appmsg/emotion/icon_emotion_switch.2x278965.png
@@ -13,11 +12,11 @@ const list = ['微笑', '撇嘴', '色', '发呆', '得意', '流泪', '害羞',
 export default {
   ready () {
     const name = this.$el.innerHTML
-    this.index = indexOf(list, name)
+    this.index = list.indexOf(name)
     this.backgroundPositionX = -this.index * 24
     let imgHTML = ''
     if (!this.isGif) {
-      imgHTML = this.$interpolate('<span class="static-emotion" style="background:url(https://res.wx.qq.com/mpres/htmledition/images/icon/emotion/default218877.gif) {{backgroundPositionX}}px 0;"></span>')
+      imgHTML = this.$interpolate('<span class="vux-static-emotion" style="background:url(https://res.wx.qq.com/mpres/htmledition/images/icon/emotion/default218877.gif) {{backgroundPositionX}}px 0;"></span>')
     } else {
       imgHTML = this.$interpolate('<img src="https://res.wx.qq.com/mpres/htmledition/images/icon/emotion/{{index}}.gif">')
     }
@@ -42,7 +41,7 @@ export default {
 .vux-emotion {
   display: inline-block;
 }
-.static-emotion {
+.vux-static-emotion {
   width: 24px;
   height: 24px;
   display: inline-block;

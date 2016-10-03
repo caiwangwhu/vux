@@ -1,13 +1,12 @@
 <template>
-  <div class="actionsheet_wrap">
+  <div class="vux-actionsheet">
     <div class="weui_mask_transition" :class="{'weui_fade_toggle': show}" :style="{display: show ? 'block' : 'none'}" @click="show=false"></div>
     <div class="weui_actionsheet" :class="{'weui_actionsheet_toggle': show}">
       <div class="weui_actionsheet_menu">
-        <div class="weui_actionsheet_cell" v-for="(key, text) in menus" @click="dispatchEvent('menu-click', key)">
-          {{{text}}}
+        <div class="weui_actionsheet_cell" v-for="(key, text) in menus" @click="emitEvent('on-click-menu', key)" v-html="text">
         </div>
         <div class="vux-actionsheet-gap" v-if="showCancel"></div>
-        <div class="weui_actionsheet_cell vux-actionsheet-cancel" @click="dispatchEvent('menu-click', 'cancel')" v-if="showCancel">{{cancelText}}</div>
+        <div class="weui_actionsheet_cell vux-actionsheet-cancel" @click="emitEvent('on-click-menu', 'cancel')" v-if="showCancel">{{cancelText}}</div>
       </div>
     </div>
   </div>
@@ -15,39 +14,56 @@
 
 <script>
 export default {
+  ready () {
+    this.$tabbar = document.querySelector('.weui_tabbar')
+  },
   props: {
-    show: {
-      type: Boolean,
-      required: true,
-      defalt: false,
-      twoWay: true
-    },
-    showCancel: {
-      type: Boolean,
-      default: false
-    },
+    show: Boolean,
+    showCancel: Boolean,
     cancelText: {
       type: String,
       default: 'cancel'
     },
     menus: {
       type: Object,
-      required: false,
-      default: {}
+      default: () => {}
     }
   },
   methods: {
-    dispatchEvent (event, menu) {
-      if (event === 'menu-click') {
-        this.$dispatch(event, menu)
+    emitEvent (event, menu) {
+      if (event === 'on-click-menu' && !/.noop/.test(menu)) {
+        this.$emit(event, menu)
+        this.$emit(`${event}-${menu}`)
         this.show = false
       }
+    },
+    fixIos (zIndex) {
+      if (this.$tabbar && /iphone/i.test(navigator.userAgent)) {
+        this.$tabbar.style.zIndex = zIndex
+      }
     }
+  },
+  watch: {
+    show (val) {
+      if (val) {
+        this.fixIos(-1)
+      } else {
+        setTimeout(() => {
+          this.fixIos(100)
+        }, 200)
+      }
+    }
+  },
+  beforeDestroy () {
+    this.fixIos(100)
   }
 }
 </script>
 
-<style>
+<style lang="less">
+@import '../../styles/weui/widget/weui_tips/weui_mask';
+@import '../../styles/weui/widget/weui_tips/weui_actionsheet';
+
 .vux-actionsheet-gap {
   height: 8px;
   width: 100%;

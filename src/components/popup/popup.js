@@ -1,87 +1,86 @@
-var Eventor = require('../../libs/eventor')
-var Tap = require('./tap')
-var PickerDialog = function (option) {
+// not a good way but works well
+window.__$vuxPopups = window.__$vuxPopups || {}
+const popupDialog = function (option) {
+  this.uuid = Math.random().toString(36).substring(3, 8)
   this.params = {}
+  this.isShow = false
   if (Object.prototype.toString.call(option) === '[object Object]') {
     this.params = {
       input: option.input || '',
       container: document.querySelector(option.input) || '',
       innerHTML: option.innerHTML || '',
+      hideOnBlur: option.hideOnBlur,
       onOpen: option.onOpen || function () {},
-      onClose: option.onClose || function () {},
-      _open: option._open || function () {},
-      _close: option._close || function () {}
+      onClose: option.onClose || function () {}
     }
   }
-  if (!!document.querySelectorAll('.picker-mask').length <= 0) {
+  if (!!document.querySelectorAll('.vux-popup-mask').length <= 0) {
     this.divMask = document.createElement('a')
-    this.divMask.className = 'picker-mask'
+    this.divMask.className = 'vux-popup-mask'
+    this.divMask.dataset.uuid = '' // 用于多个popup共享一个mask
     this.divMask.href = 'javascript:void(0)'
     document.body.appendChild(this.divMask)
   }
-  var div
+  let div
   if (!option.container) {
     div = document.createElement('div')
   } else {
     div = option.container
   }
-  div.className = 'picker-dialog'
+  div.className = 'vux-popup-dialog vux-popup-dialog-' + this.uuid
 
   if (!option.container) {
     document.body.appendChild(div)
   }
-  this.mask = document.querySelector('.picker-mask')
-  this.container = document.querySelectorAll('.picker-dialog')
-  this.container = this.container[this.container.length - 1]
+  this.container = document.querySelector('.vux-popup-dialog-' + this.uuid)
+  this.mask = document.querySelector('.vux-popup-mask')
+  this.mask.dataset.uuid += `,${this.uuid}`
   this._bindEvents()
   option = null
   return this
 }
 
-Eventor.mixTo(PickerDialog)
-PickerDialog.prototype.updateInputPosition = function () {
-  this._hackInputFocus()
-}
-
-PickerDialog.prototype._bindEvents = function () {
-  var _this = this
-
-  function triggerClick (e) {
-    _this.hide()
-    _this.emit('close')
+popupDialog.prototype.onClickMask = function () {
+  if (this.params.hideOnBlur && this.isShow) {
+    this.hide(false)
   }
-  Tap.tap(this.mask, triggerClick)
-  this.container.addEventListener('touchmove', function (e) {
-    e.stopPropagation()
-    e.preventDefault()
-    return false
-  }, false)
-  return this
 }
 
-PickerDialog.prototype.show = function () {
-  var _this = this
-  _this.mask.classList.add('show')
-  _this.params._open && _this.params._open(this)
-  _this.params.onOpen && _this.params.onOpen(this)
-  return this
+popupDialog.prototype._bindEvents = function () {
+  this.params.hideOnBlur && this.mask.addEventListener('click', this.onClickMask.bind(this), false)
 }
 
-PickerDialog.prototype.hide = function () {
-  var _this = this
-  _this.mask.classList.remove('show')
-  _this.params._close && _this.params._close(this)
-  _this.params.onClose && _this.params.onClose(this)
-  return this
+popupDialog.prototype.show = function () {
+  this.mask.classList.add('vux-popup-show')
+  this.container.classList.add('vux-popup-show')
+  this.params.onOpen && this.params.onOpen(this)
+  this.isShow = true
+  window.__$vuxPopups[this.uuid] = 1
 }
 
-PickerDialog.prototype.html = function (html) {
+popupDialog.prototype.hide = function (shouldCallback = true) {
+  this.container.classList.remove('vux-popup-show')
+  if (!document.querySelector('.vux-popup-dialog.vux-popup-show')) {
+    this.mask.classList.remove('vux-popup-show')
+  }
+  shouldCallback === false && this.params.onClose && this.params.hideOnBlur && this.params.onClose(this)
+  this.isShow = false
+  delete window.__$vuxPopups[this.uuid]
+}
+
+popupDialog.prototype.html = function (html) {
   this.container.innerHTML = html
-  return this
 }
 
-PickerDialog.prototype.destroy = function () {
-  this.mask && this.mask.parentNode && this.mask.parentNode.removeChild(this.mask)
+popupDialog.prototype.destroy = function () {
+  this.mask.dataset.uuid = this.mask.dataset.uuid.replace(new RegExp(`,${this.uuid}`, 'g'), '')
+  if (!this.mask.dataset.uuid) {
+    this.mask.removeEventListener('click', this.onClickMask.bind(this), false)
+    this.mask && this.mask.parentNode && this.mask.parentNode.removeChild(this.mask)
+  } else {
+    this.hide()
+  }
+  delete window.__$vuxPopups[this.uuid]
 }
 
-module.exports = PickerDialog
+export default popupDialog

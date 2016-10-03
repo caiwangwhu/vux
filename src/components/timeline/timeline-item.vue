@@ -1,71 +1,14 @@
 <template>
-	<li class="timeline-item">
-		<div :class=" {'timeline-item-head': !isFirst,'timeline-item-head-first': isFirst }" :style="headStyle">
-			<icon v-show="isFirst" type="success_no_circle" class="timeline-item-checked"></icon>
+	<li class="vux-timeline-item">
+		<div :class="['vux-timeline-item-color', {'vux-timeline-item-head': !isFirst,'vux-timeline-item-head-first': isFirst }]" :style="headStyle">
+			<icon v-show="isFirst && $parent.isShowIcon" type="success_no_circle" class="vux-timeline-item-checked"></icon>
 		</div>
-		<div class="timeline-item-tail" :style="tailStyle"></div>
-		<div class="timeline-item-content">
+		<div class="vux-timeline-item-tail" :style="tailStyle"></div>
+		<div class="vux-timeline-item-content">
 			<slot></slot>
 		</div>
 	</li>
 </template>
-
-<style lang="less">
-
-	@timeline: ~"timeline";
-
-	.@{timeline} {
-		&-item {
-			position:relative;
-		}
-
-		&-item-content {
-			padding:0 0 1.5rem 1.2rem;
-		}
-
-		&-item-head, &-item-head-first {
-			position:absolute;
-			content:'';
-			z-index:99;
-			border-radius:99px;
-		}
-
-		&-item-head {
-			width:10px;
-			height:10px;
-			left:1px;top:4px;
-		}
-
-		&-item-head-first {
-			width:20px;
-			height:20px;
-			left:-4px;top:5px;
-		}
-
-		&-item-tail {
-			position:absolute;
-			content:'';
-			height:100%;
-			width:2px;
-			left:5px;top:5px;
-		}
-
-		&-item-checked {
-			width: 100%;
-			position: absolute;
-			left: 0;
-			top: 45%;
-			transform: translateY(-50%);
-
-			&::before {
-				font-size: 12px;
-				width: 20px;
-				color: #FFF;
-			}
-		}
-	}
-
-</style>
 
 <script>
 import Icon from '../icon'
@@ -78,6 +21,16 @@ export default {
       headStyle: { backgroundColor: this.$parent.color }
     }
   },
+  ready () {
+    this.$parent.setChildProps()
+  },
+  beforeDestroy () {
+    // this will be null
+    const $parent = this.$parent
+    this.$nextTick(() => {
+      $parent.setChildProps()
+    })
+  },
   components: {
     Icon
   },
@@ -88,3 +41,4 @@ export default {
   }
 }
 </script>
+

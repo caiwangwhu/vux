@@ -11,9 +11,8 @@
 </template>
 
 <script>
-import Icon from '../icon/'
-import Flexbox from '../flexbox/'
-import FlexboxItem from '../flexbox-item/'
+import Icon from '../icon'
+import { Flexbox, FlexboxItem } from '../flexbox'
 
 const sizeMap = {
   'large': 40,
@@ -35,26 +34,25 @@ export default {
       type: String,
       default: 'large'
     },
-    value: {
-      type: String,
-      twoWay: true
-    }
+    value: String
   },
   computed: {
-    width: function () {
+    width () {
       return sizeMap[this.size]
     }
   },
   methods: {
-    change: function (color) {
+    change (color) {
       this.value = color
-      this.$dispatch('on-change', color)
+      this.$emit('on-change', color)
     }
   }
 }
 </script>
 
-<style>
+<style lang="less">
+@import '../../styles/weui/icon/weui_icon_font';
+
 .vux-color-box {
   text-align: center;
 }
@@ -67,7 +65,7 @@ export default {
   box-sizing: border-box;
   position: relative
 }
-.vux-color-checked:before {
+.vux-color-checked.weui_icon_success_no_circle:before {
   color: #fff;
 }
 .vux-color-checked {
@@ -75,7 +73,6 @@ export default {
   position: absolute;
   left: 0;
   top: 50%;
-  -webkit-transform: translateY(-50%);
   transform: translateY(-50%);
 }
 .vux-color-white {

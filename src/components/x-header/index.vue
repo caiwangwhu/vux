@@ -1,12 +1,13 @@
 <template>
-  <div class="x-header">
-    <div class="x-header-left">
-      <a class="x-header-back" @click.preventDefault v-show="leftOptions.showBack" @click="onClickBack">{{leftOptions.backText}}</a>
+  <div class="vux-header">
+    <div class="vux-header-left">
+      <a class="vux-header-back" @click.preventDefault v-show="leftOptions.showBack" :transition="transition" @click="onClickBack">{{leftOptions.backText}}</a>
+      <div class="left-arrow" @click="onClickBack" v-show="leftOptions.showBack" :transition="transition"></div>
       <slot name="left"></slot>
     </div>
-    <h1 class="x-header-title"><slot></slot></h1>
-    <div class="x-header-right">
-      <a class="x-header-more" @click.preventDefault @click="$dispatch('on-click-more')" v-if="rightOptions.showMore"></a>
+    <h1 class="vux-header-title" @click="$emit('on-click-title')"><span v-show="title" :transition="transition">{{title}}</span><slot></slot></h1>
+    <div class="vux-header-right">
+      <a class="vux-header-more" @click.preventDefault @click="$emit('on-click-more')" v-if="rightOptions.showMore"></a>
       <slot name="right"></slot>
     </div>
   </div>
@@ -25,6 +26,8 @@ export default {
         }
       }
     },
+    title: String,
+    transition: String,
     rightOptions: {
       type: Object,
       default () {
@@ -35,9 +38,9 @@ export default {
     }
   },
   methods: {
-    onClickBack: function () {
+    onClickBack () {
       if (this.leftOptions.preventGoBack) {
-        this.$dispatch('on-click-back')
+        this.$emit('on-click-back')
       } else {
         history.back()
       }
@@ -46,14 +49,16 @@ export default {
 }
 </script>
 
-<style>
-.x-header {
+<style lang="less">
+@import '../../styles/variable.less';
+
+.vux-header {
   position: relative;
   padding: 3px 0;
-  -webkit-box-sizing: border-box;
-  background-color: #35495e;
+  box-sizing: border-box;
+  background-color: @x-header-background-color;
 }
-.x-header .x-header-title,.x-header h1 {
+.vux-header .vux-header-title,.vux-header h1 {
   margin: 0 88px;
   margin-left: 100px;
   line-height: 40px;
@@ -65,56 +70,75 @@ export default {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #fff
+  color: @x-header-title-color;
 }
-.x-header .x-header-title a,.x-header .x-header-title a:active,.x-header h1 a,.x-header h1 a:active {
-  color: #fff
+.vux-header .vux-header-title > span {
+  display: inline-block;
 }
-.x-header .x-header-left,.x-header .x-header-right {
+.vux-header .vux-header-left,.vux-header .vux-header-right {
   position: absolute;
   top: 14px;
   display: block;
   font-size: 14px;
   line-height: 21px;
-  color: #ccc
+  color: @x-header-text-color;
 }
-.x-header .x-header-left a,.x-header .x-header-left button,.x-header .x-header-right a,.x-header .x-header-right button {
+.vux-header .vux-header-left a,.vux-header .vux-header-left button,.vux-header .vux-header-right a,.vux-header .vux-header-right button {
   float: left;
   margin-right: 8px;
-  color: #ccc
+  color: @x-header-text-color;
 }
-.x-header .x-header-left a:active,.x-header .x-header-left button:active,.x-header .x-header-right a:active,.x-header .x-header-right button:active {
+.vux-header .vux-header-left a:active,.vux-header .vux-header-left button:active,.vux-header .vux-header-right a:active,.vux-header .vux-header-right button:active {
   opacity: .5
 }
-.x-header .x-header-left {
+.vux-header .vux-header-left {
   left: 18px
 }
-.x-header .x-header-left .x-header-back {
+.vux-header .vux-header-left .vux-header-back {
   padding-left: 16px
 }
-.x-header .x-header-left .x-header-back:before {
-  content: "";
+.vux-header .vux-header-left .left-arrow {
   position: absolute;
-  display: block;
-  top: 2px;
-  left: 0;
-  width: 12px;
-  height: 12px;
-  border: 1px solid #ccc;
-  border-width: 1px 0 0 1px;
-  margin-left: 3px;
-  margin-top: 1px;
-  transform: rotate(315deg)
+  width: 30px;
+  height: 30px;
+  top: -5px;
+  left: -5px;
+
+  &:before {
+    content: "";
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border: 1px solid @x-header-arrow-color;
+    border-width: 1px 0 0 1px;
+    transform: rotate(315deg);
+    top: 8px;
+    left: 7px;
+  }
 }
-.x-header .x-header-right {
+.vux-header .vux-header-right {
   right: 15px
 }
-.x-header .x-header-right a,.x-header .x-header-right button {
+.vux-header .vux-header-right a,.vux-header .vux-header-right button {
   margin-left: 8px;
   margin-right: 0
 }
-.x-header .x-header-right .x-header-more:after {
+.vux-header .vux-header-right .vux-header-more:after {
   content: "\2022\0020\2022\0020\2022\0020";
   font-size: 16px;
+}
+.vux-header-fade-in-right-enter {
+  animation: fadeinR .5s;
+}
+.vux-header-fade-in-left-enter {
+  animation: fadeinL .5s;
+}
+@keyframes fadeinR{
+  0%{opacity:0;transform:translateX(80px);}
+  100%{opacity:1;transform:translateX(0);}
+}
+@keyframes fadeinL{
+  0%{opacity:0;transform:translateX(-80px);}
+  100%{opacity:1;transform:translateX(0);}
 }
 </style>

@@ -3,12 +3,14 @@
     <group>
       <switch title="Toggle" :value.sync="show"></switch>
     </group>
-    <confirm :show.sync="show" title="confirm deleting the item"><p style="text-align:center;">Are you sure?</p></confirm>
+    <confirm :show.sync="show" title="confirm deleting the item" @on-cancel="onCancel" @on-confirm="onConfirm" @on-show="onShow" @on-hide="onHide">
+      <p style="text-align:center;">Are you sure?</p>
+    </confirm>
   </div>
 </template>
 
 <script>
-import { Confirm, Group, Switch } from '../components/'
+import { Confirm, Group, Switch } from '../components'
 
 export default {
   components: {
@@ -19,6 +21,20 @@ export default {
   data () {
     return {
       show: false
+    }
+  },
+  methods: {
+    onCancel () {
+      console.log('on cancel')
+    },
+    onConfirm () {
+      console.log('on confirm')
+    },
+    onHide () {
+      console.log('on hide')
+    },
+    onShow () {
+      console.log('on show')
     }
   }
 }

@@ -6,41 +6,37 @@
       <h1 class="vux-title" style="display:none;">
         <span class="demo-icon" slot="icon" style="font-size:60px;color:#35495e;display: block;">&#xe637;</span>
       </h1>
-      <p class="vux-notice">Beta. Not Production Ready(v0.1).</p>
+      <p class="vux-notice">v{{version}}</p>
     </div>
     <group>
-      <cell title="Demo" is-link v-link="'/demo'">
+      <cell title="Demo" link="/demo" value="演示">
         <span class="demo-icon" slot="icon" style="color:#F70968">&#xe633;</span>
       </cell>
     </group>
     <group>
-      <cell title="HISTORY.md" value="-">
-        <span class="demo-icon" slot="icon" style="color:#666;">&#xe63a;</span>
-      </cell>
-      <cell title="Thanks" is-link v-link="'project/thanks'">
-        <span class="demo-icon" slot="icon" style="color:#666;">&#xe62e;</span>
-      </cell>
-    </group>
-    <group>
-      <cell title="Fork me" is-link v-link="'http://github.com/airyland/vux'">
-        <span class="demo-icon" slot="icon" style="color:#35495e;">&#xe62f;</span>
-      </cell>
-      <cell title="Buy me a coffee" is-link v-link="'project/donate'">
+      <cell title="Buy me a coffee" link="project/donate">
         <span class="demo-icon" slot="icon" style="color:red;">&#xe630;</span>
+        <div class="badge-value" slot="value" class="vux-center-v">
+          <badge text="捐赠"></badge>
+        </div>
+      </cell>
+      <cell title="Github" link="http://github.com/airyland/vux" value="Star me">
+        <span class="demo-icon" slot="icon" style="color:#35495e;">&#xe62f;</span>
       </cell>
     </group>
   </div>
 </template>
 
 <script>
-import { Cell, Group } from './components/'
+import { Cell, Group, Badge } from './components'
 const version = require('../package.json').version
 export default {
   components: {
     Cell,
-    Group
+    Group,
+    Badge
   },
-  data: function () {
+  data () {
     return {
       version: version
     }
@@ -71,6 +67,5 @@ export default {
 body {
   font-family: Helvetica, sans-serif;
   background-color: #fbf9fe;
-  padding-bottom: 50px;
 }
 </style>

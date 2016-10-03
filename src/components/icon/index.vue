@@ -8,14 +8,16 @@ export default {
     type: String
   },
   computed: {
-    className: function () {
-      return 'weui_icon weui_icon_' + this.type
+    className () {
+      return `weui_icon weui_icon_${this.type}`
     }
   }
 }
 </script>
 
-<style>
+<style lang="less">
+@import '../../styles/weui/icon/weui_icon_font';
+
 .icon_big:before {
   font-size: 104px;
 }

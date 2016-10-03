@@ -31,9 +31,14 @@ export default {
     },
     options: {
       type: Object,
-      default: function () {
+      default () {
         return {}
       }
+    }
+  },
+  watch: {
+    endVal (val) {
+      this._countup.update(val)
     }
   }
 }

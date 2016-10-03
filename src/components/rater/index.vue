@@ -1,6 +1,6 @@
 <template>
   <div class="vux-rater">
-    <a class="vux-rater-box" v-for="i in max" @click="handleClick(i)" :class="{'is-active':value > i}" :style="{color:colors[i],marginRight:margin+'px',fontSize: fontSize + 'px', width: fontSize + 'px', height: fontSize + 'px'}">
+    <a class="vux-rater-box" v-for="i in max" @click="handleClick(i)" :class="{'is-active':value > i}" :style="{color: colors && colors[i] ? colors[i] : '#ccc',marginRight:margin+'px',fontSize: fontSize + 'px', width: fontSize + 'px', height: fontSize + 'px', lineHeight: fontSize + 'px'}">
       <span class="vux-rater-inner">{{star}}<span class="vux-rater-outer" :style="{color: activeColor, width: cutPercent + '%'}" v-if="cutPercent > 0 && cutIndex === i">{{star}}</span></span>
     </a>
   </div>
@@ -9,12 +9,7 @@
 <script>
 export default {
   ready () {
-    for (var i = 0; i < this.max; i++) {
-      this.colors.push('#ccc')
-    }
-    if (this.value) {
-      this.handleClick(this.value - 1, true)
-    }
+    this.updateStyle()
   },
   props: {
     max: {
@@ -23,13 +18,9 @@ export default {
     },
     value: {
       type: Number,
-      default: 0,
-      twoWay: true
+      default: 0
     },
-    disabled: {
-      type: Boolean,
-      default: false
-    },
+    disabled: Boolean,
     star: {
       type: String,
       default: '★'
@@ -48,27 +39,34 @@ export default {
     }
   },
   computed: {
-    sliceValue: function () {
+    sliceValue () {
       const _val = this.value.toString().split('.')
       return _val.length === 1 ? [_val[0], 0] : _val
     },
-    cutIndex: function () {
+    cutIndex () {
       return this.sliceValue[0] * 1
     },
-    cutPercent: function () {
+    cutPercent () {
       return this.sliceValue[1] * 10
     }
   },
   methods: {
     handleClick (i, force) {
       if (!this.disabled || force) {
-        this.value = i + 1
-        for (var j = 0; j < this.max; j++) {
-          if (j <= i) {
-            this.colors.$set(j, this.activeColor)
-          } else {
-            this.colors.$set(j, '#ccc')
-          }
+        if (this.value === i + 1) {
+          this.value = i
+          this.updateStyle()
+        } else {
+          this.value = i + 1
+        }
+      }
+    },
+    updateStyle () {
+      for (var j = 0; j < this.max; j++) {
+        if (j <= this.value - 1) {
+          this.colors.$set(j, this.activeColor)
+        } else {
+          this.colors.$set(j, '#ccc')
         }
       }
     }
@@ -81,8 +79,8 @@ export default {
     }
   },
   watch: {
-    value: function (val) {
-      this.handleClick(val - 1)
+    value (val) {
+      this.updateStyle()
     }
   }
 }
@@ -97,7 +95,6 @@ export default {
 .vux-rater a {
   display: inline-block;
   text-align: center;
-  line-height: 25px;
   cursor: pointer;
   color: #ccc;
 }
@@ -107,9 +104,6 @@ export default {
 }
 .vux-rater a:hover {
   color: #ffdd99;
-}
-.vux-rater a.is-active {
-
 }
 .vux-rater a.is-disabled {
   color: #ccc !important;
@@ -130,3 +124,4 @@ export default {
   overflow: hidden;
 }
 </style>
+

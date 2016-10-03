@@ -1,6 +1,6 @@
 <template>
   <div class="vux-circle">
-    <svg view-box="0 0 100 100">
+    <svg viewBox="0 0 100 100">
       <path :d="pathString" :stroke="trailColor" :stroke-width="trailWidth" :fill-opacity="0"/>
       <path :d="pathString" stroke-linecap="round" :stroke="strokeColor" :stroke-width="strokeWidth" fill-opacity="0" :style="pathStyle"/>
     </svg>
@@ -38,18 +38,18 @@ export default {
     }
   },
   computed: {
-    radius: function () {
+    radius () {
       return 50 - this.strokeWidth / 2
     },
-    pathString: function () {
+    pathString () {
       return `M 50,50 m 0,-${this.radius}
       a ${this.radius},${this.radius} 0 1 1 0,${2 * this.radius}
       a ${this.radius},${this.radius} 0 1 1 0,-${2 * this.radius}`
     },
-    len: function () {
+    len () {
       return Math.PI * 2 * this.radius
     },
-    pathStyle: function () {
+    pathStyle () {
       return {
         'stroke-dasharray': `${this.len}px ${this.len}px`,
         'stroke-dashoffset': `${((100 - this.percent) / 100 * this.len)}px`,
@@ -63,9 +63,8 @@ export default {
 <style>
 .vux-circle {
   position: relative;
-  width: 101%;
-  height: 101%;
-  overflow: hidden;
+  width: 100%;
+  height: 100%;
 }
 .vux-circle-content {
   width: 100%;
