@@ -23,10 +23,11 @@ app.use(require('webpack-hot-middleware')(compiler))
 
 app.use('/static', express.static('./src/assets'))
 
-app.listen(8080, '0.0.0.0', function (err) {
+const port = 7788
+app.listen(port, '0.0.0.0', function (err) {
   if (err) {
     console.log(err)
     return
   }
-  console.log('Listening at http://localhost:8080')
+  console.log(`Listening at http://localhost:${port}`)
 })
